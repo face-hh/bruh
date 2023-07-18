@@ -15,8 +15,11 @@ Also known as BRUHIFF or BRUH.
 ## OR
 1. Double-click on `image.bruh` using your File Explorer.
 2. Click on `More Apps`
+
 ![More Apps](https://cdn.discordapp.com/attachments/1074408238939906220/1130765375693406258/image.png)
+
 3. Click on `Choose app from this PC`
+
 ![Choose app](https://cdn.discordapp.com/attachments/1074408238939906220/1130765548813308034/image.png)
 
 Tip: tick "Always use this app to open .bruh files"
@@ -32,4 +35,4 @@ That's it! You can now open `.bruh` files!
 3. Slow preview window.
 4. Some large images might include `#0` hex which will crash the program.
 5. No transparency.
-
+6. Only works on Windows
