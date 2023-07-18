@@ -1,0 +1,25 @@
+[package]
+name = "bruh"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+base64 = "0.21.2"
+colors-transform = "0.2.11"
+css-color-parser = "0.1.2"
+eframe = "0.22.0"
+egui_extras = { version = "0.22", features = ["image"] }
+encoding = "0.2.33"
+encoding_rs = "0.8.32"
+env_logger = "0.10.0"
+image = { version = "0.24", default-features = false, features = ["png"] }
+rand = "0.8.5"
+show-image = "0.13.1"
+skia-safe = "0.63.0"
+winapi = "0.3"
+
+[[bin]]
+name = "bruh"
+path = "main.rs"
