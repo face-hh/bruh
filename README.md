@@ -30,6 +30,8 @@ Tip: tick "Always use this app to open .bruh files"
 That's it! You can now open `.bruh` files!
 
 # Known issues
+⚠ The PNG > BRUH won't work unless you have the same file (i.e. image.png) but with the .bruh extension (i.e. image.bruh). What do you have to do? Create an empty file called `image.png`.
+
 1. Preview window width & height are not exact.
 2. Huge file size on large images.
 3. Slow preview window.
