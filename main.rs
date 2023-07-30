@@ -56,13 +56,6 @@ fn png_to_bruh(path: PathBuf) -> Result<(), std::io::Error> {
         let height_bytes: [u8; 4] = height.to_ne_bytes();
         let width_bytes: [u8; 4] = width.to_ne_bytes();
         let path_to_bruh = path_str.replace(".png", ".bruh");
-        // let mut file = fs::File::create(path_str.replace(".png", ".bruh")).expect("Couldn't write to image.bruh");
-
-        // file.write_all(&height_bytes);
-        // file.write_all(&width_bytes);
-
-        // file.write_all(str.as_bytes());
-        fs::remove_file(&path_to_bruh).expect("File delete failed");
 
         let mut file = OpenOptions::new()
             .write(true)
