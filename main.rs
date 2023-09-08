@@ -154,6 +154,7 @@ fn main() -> Result<(), eframe::Error> {
         let (width, height) = bruh_to_png(file_path);
         println!("{} {}", width, height);
         let options = eframe::NativeOptions {
+            resizable: false,
             initial_window_size: Some(egui::vec2(width as f32, height as f32)),
             ..Default::default()
         };
