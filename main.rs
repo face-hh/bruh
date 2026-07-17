@@ -14,6 +14,7 @@ use std::{
     io::Write,
     path::PathBuf,
 };
+use std::fs::File;
 
 use skia_safe::{
     AlphaType, Color4f, ColorType, EncodedImageFormat, ImageInfo, Paint, Rect, Surface,
@@ -30,6 +31,7 @@ fn vec_to_u32_ne(bytes: &[u8]) -> u32 {
 }
 
 fn png_to_bruh(path: PathBuf) -> Result<(), std::io::Error> {
+    
     let img = image::open(&path).expect("File not found!");
     let mut str = String::new();
     let mut last_line = 0;
@@ -56,6 +58,7 @@ fn png_to_bruh(path: PathBuf) -> Result<(), std::io::Error> {
         let height_bytes: [u8; 4] = height.to_ne_bytes();
         let width_bytes: [u8; 4] = width.to_ne_bytes();
         let path_to_bruh = path_str.replace(".png", ".bruh");
+        File::create(path_to_bruh)?;
 
         let mut file = OpenOptions::new()
             .write(true)
