@@ -32,7 +32,9 @@ fn vec_to_u32_ne(bytes: &[u8]) -> u32 {
 fn png_to_bruh(path: PathBuf) -> Result<(), std::io::Error> {
     let img = image::open(&path).expect("File not found!");
     let mut str = String::new();
+    let mut last_color = String::new();
     let mut last_line = 0;
+    let mut run_length = 1;
 
     for pixel in img.pixels() {
         let hex_color = Rgb::from(
@@ -40,13 +42,29 @@ fn png_to_bruh(path: PathBuf) -> Result<(), std::io::Error> {
             pixel.2 .0[1] as f32,
             pixel.2 .0[2] as f32,
         )
-        .to_css_hex_string();
+        .to_css_hex_string()
+        .replace("#", "");
+
+        if last_color == hex_color && last_line == pixel.1 {
+            run_length += 1;
+        } else {
+            if !last_color.is_empty() {
+                str.push_str(&format!("{}{:04x}", last_color, run_length));
+            }
+            last_color = hex_color;
+            run_length = 1;
+        }
 
         if last_line != pixel.1 {
             str.push_str("\n");
             last_line = pixel.1;
+            last_color.clear();
         }
-        str.push_str(&hex_color.replace("#", ""));
+    }
+
+    // Write the last run
+    if !last_color.is_empty() {
+        str.push_str(&format!("{}{:04x}", last_color, run_length));
     }
 
     if let Some(path_str) = &path.to_str() {
@@ -76,20 +94,36 @@ fn png_to_bruh(path: PathBuf) -> Result<(), std::io::Error> {
 }
 
 fn bruh_to_png(path: PathBuf) -> (u32, u32) {
-    let mut contents: Vec<u8> = fs::read(&path).expect("Couldn't read file.");
-    let binding: Vec<_> = contents.drain(0..8).collect();
+    let contents: Vec<u8> = fs::read(&path).expect("Couldn't read file.");
+    let (width, height) = {
+        let mut header = &contents[0..8];
+        let width = vec_to_u32_ne(&header[0..4]);
+        let height = vec_to_u32_ne(&header[4..8]);
+        (width, height)
+    };
 
-    let width = vec_to_u32_ne(&binding[0..4]);
-    let height = vec_to_u32_ne(&binding[4..8]);
+    let sanitized_content = String::from_utf8_lossy(&contents[8..]).replace("\n", "");
+    let mut pixels: Vec<u8> = Vec::with_capacity((width * height * 4) as usize);
 
-    let sanitized_content = String::from_utf8_lossy(&contents).replace("\n", "");
+    let mut i = 0;
+    while i < sanitized_content.len() {
+        let hex_color = &sanitized_content[i..i + 6];
+        let run_length = u16::from_str_radix(&sanitized_content[i + 6..i + 10], 16)
+            .expect("Invalid run-length encoding");
 
-    let result: Vec<&str> = sanitized_content
-        .as_bytes()
-        .chunks(6)
-        .map(std::str::from_utf8)
-        .collect::<Result<_, _>>()
-        .expect("Invalid UTF-8 sequence in the input string");
+        let parsed_color = ("#".to_owned() + hex_color)
+            .parse::<CssColor>()
+            .expect("Failed to convert Hex to RGB");
+
+        for _ in 0..run_length {
+            pixels.push(parsed_color.r);
+            pixels.push(parsed_color.g);
+            pixels.push(parsed_color.b);
+            pixels.push(255); // Assuming full opacity (RGBA)
+        }
+
+        i += 10; // Move to the next color+run-length pair
+    }
 
     let info = ImageInfo::new(
         (width as i32, height as i32),
@@ -101,24 +135,16 @@ fn bruh_to_png(path: PathBuf) -> (u32, u32) {
     let mut surface = Surface::new_raster(&info, None, None).unwrap();
     let canvas = surface.canvas();
 
-    for (i, color) in result.iter().enumerate() {
-        let hex = "#".to_owned() + color;
-
-        let parsed_color = hex
-            .parse::<CssColor>()
-            .expect("Failed to convert Hex to RGB");
+    for (index, chunk) in pixels.chunks(4).enumerate() {
         let color4f = Color4f::new(
-            parsed_color.r as f32,
-            parsed_color.g as f32,
-            parsed_color.b as f32,
-            0.004 as f32,
+            chunk[0] as f32 / 255.0,
+            chunk[1] as f32 / 255.0,
+            chunk[2] as f32 / 255.0,
+            chunk[3] as f32 / 255.0,
         );
         let paint = Paint::new(color4f, None);
-        if i == 0 {
-            println!("{:?}", paint)
-        }
-        let x = i % width as usize;
-        let y = i / width as usize;
+        let x = (index as u32) % width;
+        let y = (index as u32) / width;
 
         let rect = Rect::from_point_and_size((x as f32, y as f32), (1.0, 1.0));
         canvas.draw_rect(rect, &paint);
@@ -132,6 +158,7 @@ fn bruh_to_png(path: PathBuf) -> (u32, u32) {
 
     return (width, height);
 }
+
 
 fn main() -> Result<(), eframe::Error> {
     let args: Vec<String> = env::args().collect();
